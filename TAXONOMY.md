@@ -5,13 +5,29 @@ furui はファイル/ディレクトリを意味ごとに選り分ける。選�
 
 | key | 判定命題 (Jev choice criteria) | 標準ディレクトリ |
 |---|---|---|
-| `agent` | An AI agent persona or character: a named entity with a role, responsibilities, and a personality definition | `agents/` |
-| `skill` | An AI agent skill, tool, plugin, MCP server, or CLI utility: a capability that does or operates something | `skills/` |
-| `project` | A software project, application, service, or website: a git repository, app, or deployable artifact | `projects/` |
+| `agent` | An AI agent persona or character: a named entity (a "who") with an identity, name, role, responsibilities, personality, or character definition — organized as a being, NOT as an operating tool | `agents/` |
+| `skill` | A reusable capability, tool, or operation: a skill, plugin, MCP server, CLI utility, script, command, or pipeline that does something — software that performs an action, NOT a named persona | `skills/` |
+| `project` | A standalone software product, application, service, or website deliverable: a git repo that runs as a deployable artifact, not a persona and not a one-off utility script | `projects/` |
 | `wiki` | Knowledge, documentation, notes, records, plans, references, or any archive material | `wiki/` |
 | `junk` | A temporary or stray artifact: log file, backup, executable, cache, leftover, or otherwise disposable junk | `.trash/` |
 
 ## 分類の実際 (実測ノート)
+
+### 篩は Jev より先に走る(誤検知を嫌って意図的に狭い)
+
+`classify` は ゴミ篩 → エージェント篩 → スキル篩 → Jev の順に判定する。
+篩で確定した項目は Jev を呼ばず confidence 1.00 で返す。あいまいなものは
+Jev に委ね、0.4 未満は `ambiguous`(動かさない)。
+
+- **ゴミ篩(`guess_junk`)** — 拡張子で即判定(+ **`:Zone.Identifier`**(Windows 由来マーカー)は恒久ゴミ。maniest 生成時にも読み飛ばす)
+- **エージェント篩(`guess_agent`)** — 「**人名ならエージェント**」。
+  - 名前が `agent/coordinator/advisor/persona/director...` 等のペルソナ tokens を持つ
+    (`mito-coordinator`, `garden-agent`, `architecture-agent`, `strategic-advisors`)
+  - 説明に「役割を持つ人名」(役割/担当/ペルソナ)が見える
+- **スキル篩(`guess_skill`)** — 「**CLI メインでスキルがくっついてくる**」。
+  - 名前が `cli/scripts/macro/plugin/mcp/pipeline...` 等の操作系 tokens を持つ
+  - README 等の文面に CLI/コマンドライン/ターミナル/マクロ集 が見える
+    (「dir contains ...」の一覧にはマッチさせない。実測: `tests/cli` サブディレクトリ名で誤爆した)
 
 ### Jev の絶対尤度 (noul) は使わない
 

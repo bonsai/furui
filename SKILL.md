@@ -41,7 +41,15 @@ python3 -m furui.cli apply plan.tsv --root <dir> --yes      # 実行（ログ: f
 
 - **拡張子で明らかゴミは Jev を呼ばない**:
   `.log/.bak/.tmp/.swp/.pyc/.pyo/.DS_Store/.exe/.dll/.db-wal/.db-shm`、
-  `無題*/untitled`、`.~`/`~$` ロック、URL名の .txt
+  `無題*/untitled`、`.~`/`~$` ロック、URL名の .txt、
+  `:Zone.Identifier`(Windows 由来マーカー。manifest 生成時にも読み飛ばす)
+- **エージェント篩は Jev より先** — 「**人名ならエージェント**」。
+  `mito-coordinator` / `garden-agent` / `architecture-agent` / `strategic-advisors` 等の
+  ペルソナ命名、または説明に「役割を持つ人名」が見える項目は Jev を呼ばず agent 1.00
+- **スキル篩** — 「**CLI メインでスキルがくっついてくる**」。
+  名前が `cli/scripts/macro/plugin/mcp/pipeline` 等、文面に CLI/コマンドライン/
+  ターミナル/マクロ集 が見える項目は skill 1.00(「dir contains ...」の一覧には
+  マッチさせない — `tests/cli` で誤爆した実測あり)
 - **Jev には choice(択一)質問を使う**。`noul`(絶対尤度)は全カテゴリが同時に高くなるため
   差が出ない(実測で全項目0.6-0.8に並ぶ問題が確認された)。choice にすると confidence 0.9+ で単一カテゴリが返る
 - 判定が confidence 0.4 未満は `ambiguous` — **動かさない**(人に任せる)

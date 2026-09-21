@@ -2,7 +2,9 @@
 
 実測済み(normal threshold)の設計:
   - 拡張子で決まる明らかゴミ(.log/.bak/.tmp/.exe/...)は Jev を呼ばず先に除外
-  - それ以外は Jev に choice 質問(択一)で単一カテゴリを選ばせる
+  - 人名(persona)ならエージェント…名前/説明の persona シグネチャで先に確定
+  - CLI メインならスキル…CLI/scripts/macro のシグネチャで先に確定
+  - 残りは Jev に choice 質問(択一)で単一カテゴリを選ばせる
     (noul の同時判定は全カテゴリが高くなり差が出にくいため使わない)
 """
 from __future__ import annotations
@@ -10,7 +12,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .buckets import TAXONOMY, guess_junk, load_manifest
+from .buckets import (
+    TAXONOMY,
+    guess_junk,
+    guess_agent,
+    guess_skill,
+    load_manifest,
+)
 from . import jev as jevapi
 
 LABELS = list(TAXONOMY.keys()) + ["junk"]
@@ -36,6 +44,7 @@ class Classified:
     prob: float = 0.0
     confidence: float = 0.0
     probs: list[float] = field(default_factory=list)
+    reason: str = ""
 
 
 def run(manifest: str, *, min_conf: float = 0.4) -> list[Classified]:
@@ -46,7 +55,15 @@ def run(manifest: str, *, min_conf: float = 0.4) -> list[Classified]:
     for i, row in enumerate(rows):
         reason = guess_junk(row["rel"])
         if reason:
-            out.append(Classified(row["rel"], row["desc"], "junk", 1.0, 1.0))
+            out.append(Classified(row["rel"], row["desc"], "junk", 1.0, 1.0, reason=reason))
+            continue
+        reason = guess_agent(row["rel"], row["desc"])
+        if reason:
+            out.append(Classified(row["rel"], row["desc"], "agent", 1.0, 1.0, reason=reason))
+            continue
+        reason = guess_skill(row["rel"], row["desc"])
+        if reason:
+            out.append(Classified(row["rel"], row["desc"], "skill", 1.0, 1.0, reason=reason))
             continue
         pending.append((i, row["rel"] + " | " + row["desc"]))
 
@@ -58,7 +75,7 @@ def run(manifest: str, *, min_conf: float = 0.4) -> list[Classified]:
             bucket = choice if choice in LABELS else "ambiguous"
             if bucket != "ambiguous" and conf < min_conf:
                 bucket = "ambiguous"
-            out.append(Classified(r["rel"], r["desc"], bucket, conf, conf))
+            out.append(Classified(r["rel"], r["desc"], bucket, conf, conf, reason="jev"))
 
     # original order preserved
     return out
