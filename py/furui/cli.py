@@ -20,6 +20,7 @@ from . import manifest as manifest_mod
 from . import classify as classify_mod
 from . import plan as plan_mod
 from . import embed as embed_mod
+from . import rules as rules_mod
 
 
 def _cmd_manifest(args) -> int:
@@ -75,6 +76,21 @@ def _cmd_plan(args) -> int:
         Path(args.out).write_text(text, encoding="utf-8")
     else:
         print(text)
+    return 0
+
+
+def _cmd_rules(args) -> int:
+    table = [
+        (b, ph, t)
+        for b in ["agents", "skill", "project", "wiki", "junk", "ambiguous"]
+        for ph, t in [("vapor", 0.7), ("liquid", 0.35), ("solid", 0.1)]
+    ]
+    for bucket, ph, t in table:
+        action, reason = rules_mod.decide(bucket, rules_mod.Thermo(t, ph, 5.0))
+        print(f"{bucket:10} {ph:7} -> {action:8} {reason}")
+    if args.path:
+        th = rules_mod.thermo_of(args.path)
+        print(f"\n{args.path}: {th} ({th.age_days:.0f}日 mtime)")
     return 0
 
 
@@ -150,6 +166,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--limit", type=int, default=0)
     p.add_argument("--log", default="furui-move.log")
     p.set_defaults(func=_cmd_apply)
+
+    p = sub.add_parser("rules", help="熱力学決定表デモ（bucket×相）")
+    p.add_argument("path", nargs="?", help="相を測る実パス（省略で表のみ）")
+    p.set_defaults(func=_cmd_rules)
 
     args = ap.parse_args(argv)
     return args.func(args)

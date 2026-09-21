@@ -75,8 +75,6 @@ zen が 429(無料枠制限)・402(残高不足)・403 で落ちたら次の pro
 | 言語 | 場所 | 状態 |
 |---|---|---|
 | Python | `py/` | 実装済み |
-| TypeScript | (未着手) | - |
-| Rust | (未着手) | - |
 
 ## テスト
 
@@ -90,6 +88,9 @@ python3 -m furui.cli plan /tmp/out.json --root ~/repo
 ## 関連
 
 - `docs/ERATOSTHENES.md` — 篩と furui のエッセイ
+- `RULES.md` — 熱力学木村モデル × furui の統合整理ルール（決定表）
+- `TAXONOMY.md` — 分類軸と畳み込み処理の設計
+- `SKILL.md` — ふるい運用スキル
 - `~/.agents/skills/lms-manager/` — LM Studio (lms) 管理スキル(embed モデル導入・ヘルスチェック)
 - [bonsai/jevalin](https://github.com/bonsai/jevalin) — 意思決定エンジン(分離プロジェクト)
 

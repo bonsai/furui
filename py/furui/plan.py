@@ -1,8 +1,12 @@
-"""plan: 分類結果から「どこへ動かすか」のプランを生成する。
+"""plan: 分類結果 + 熱力学(相)から「どこへ動かすか」のプランを生成する。
 
   4タイプは TAXONOMY の標準ディレクトリ(agents/skills/projects/wiki)へ。
   junk は root/.trash/ へ。ambiguous は動かさない(人に任せる)。
   root 直下の type ディレクトリ自身は移動から除外する。
+
+  熱力学木村モデル(rules.py)と統合:
+    各 src の実パス mtime から温度相(vapor/liquid/solid)を出し、
+    decide() の決定表で move/trash/leave/review を決める。
 """
 from __future__ import annotations
 
@@ -13,6 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .buckets import BUCKET_DIR
+from . import rules as rules_mod
 
 
 class C:
@@ -31,6 +36,11 @@ class Move:
     bucket: str
     prob: float
     reason: str = ""
+
+    @property
+    def action(self) -> str:
+        """trash は .trash へ、他は move。rules との整合のため付ける。"""
+        return "trash" if self.dst.startswith(".trash/") or "/.trash/" in self.dst else "move"
 
 
 @dataclass
@@ -89,22 +99,30 @@ def from_classified(items, root: Path, *, trash: str = ".trash") -> Plan:
             plan.moves.append(Move(rel, f"{trash}/{rel}", "junk", c.prob, "junk (拡張子/命題)"))
             plan.archives.append(rel)
             continue
-        dst_dir = BUCKET_DIR[c.bucket]
-        # 既に正しいバケット配下なら動かさない(二重化を避ける)
-        if rel == dst_dir or rel.startswith(dst_dir + "/"):
+        # 実パスの相を測って rules に従う
+        src_abs = root / rel
+        thermo = rules_mod.thermo_of(str(src_abs)) if src_abs.exists() else rules_mod.Thermo(0.35, "liquid", 5.0)
+        already_home = rel == BUCKET_DIR[c.bucket] or rel.startswith(BUCKET_DIR[c.bucket] + "/")
+        action, reason = rules_mod.decide(c.bucket, thermo, already_home=already_home)
+        if action in ("leave", "review"):
             plan.stays.append(rel)
             continue
+        dst_dir = BUCKET_DIR[c.bucket]
         dst = dst_dir + "/" + rel
-        plan.moves.append(Move(rel, dst, c.bucket, c.prob))
+        plan.moves.append(Move(rel, dst, c.bucket, c.prob, f"{reason} [{thermo.phase}]"))
     return plan
 
 
 def render_cli(plan: Plan) -> str:
     lines = []
     for m in plan.moves:
-        lines.append(f"{m.src}\t->\t{m.dst}\t[{m.bucket} {m.prob:.2f}]")
+        tag = f"[{m.bucket} {m.prob:.2f}]"
+        if m.reason:
+            tag += f" {m.reason}"
+        lines.append(f"{m.src}\t->\t{m.dst}\t{tag}")
     lines.append(f"[stays] {len(plan.stays)} items left in place")
     lines.append(f"[moves] {len(plan.moves)} items to move")
+    lines.append(f"[archives->trash] {len(plan.archives)}")
     lines.append(
         f"[entropy] {plan.entropy_before:.3f} -> {plan.entropy_after:.3f}"
     )
