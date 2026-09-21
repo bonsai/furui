@@ -1,0 +1,12 @@
+agents/_all.md	**保管場所**: `.qwen/agents/`
+agents/mito	運用PM（プロジェクトマネージャー）+ 時管理担当。ユーザーとの窓口（音声/テキスト）として
+agents/terayama.md	- **所属:** SEKAI ラボ / Odessa 映画スタジオ
+skills/(無題__104720).txt	repoは以下の２つのみで対応する　明記せよ
+skills/.sheet_state.json	{
+skills/Cleanup-WslModelLink.ps1	$LINK_NAME = "models_llm"
+skills/Cycle.md	```
+skills/LIVETEST_README.md	Runs five scenarios against a real model (Claude Haiku 4.5 via OpenRouter) to
+skills/MAP.md	```
+skills/PLAJJER.txt	HTMLオブジェクトを取得することができるならプラグインを繋いで　JAVAでPLAGGERを実装する　OPENAPIで公開サーバにする
+skills/REPORT.md	| Task | Status | Notes |
+skills/Setup-WslModelLink.ps1	$ErrorActionPreference = "Stop"
