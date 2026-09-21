@@ -88,6 +88,7 @@ python3 -m furui.cli plan /tmp/out.json --root ~/repo
 ## 関連
 
 - `docs/ERATOSTHENES.md` — 篩と furui のエッセイ
+- `docs/COMPLEMENTARY.md` — 熱力学発見(木村) × 理想想像(furui) × 必殺仕訳(jev)の相補関係
 - `TAXONOMY.md` — 分類軸と畳み込み処理の設計
 - `SKILL.md` — ふるい運用スキル
 - `~/.agents/skills/lms-manager/` — LM Studio (lms) 管理スキル(embed モデル導入・ヘルスチェック)
